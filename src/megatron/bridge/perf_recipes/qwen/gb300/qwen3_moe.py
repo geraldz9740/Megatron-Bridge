@@ -85,6 +85,131 @@ def qwen3_235b_a22b_pretrain_64gpu_gb300_bf16_config() -> ConfigContainer:
     return cfg
 
 
+def _build_qwen3_235b_a22b_gb300_bf16_winner(
+    *,
+    tensor_model_parallel_size: int,
+    pipeline_model_parallel_size: int,
+    expert_model_parallel_size: int,
+    micro_batch_size: int,
+    global_batch_size: int,
+    adam_moments_dtype: torch.dtype,
+) -> ConfigContainer:
+    """Build one measured 16-GPU or 32-GPU GB300 winner."""
+    cfg = qwen3_235b_a22b_pretrain_64gpu_gb300_bf16_config()
+
+    cfg.model.tensor_model_parallel_size = tensor_model_parallel_size
+    cfg.model.pipeline_model_parallel_size = pipeline_model_parallel_size
+    cfg.model.pipeline_model_parallel_layout = None
+    cfg.model.context_parallel_size = 1
+    cfg.model.virtual_pipeline_model_parallel_size = None
+    cfg.model.expert_model_parallel_size = expert_model_parallel_size
+    cfg.model.expert_tensor_parallel_size = 1
+    cfg.model.sequence_parallel = tensor_model_parallel_size > 1
+    cfg.train.micro_batch_size = micro_batch_size
+    cfg.train.global_batch_size = global_batch_size
+
+    cfg.model.moe_token_dispatcher_type = "flex"
+    cfg.model.moe_flex_dispatcher_backend = "hybridep"
+    cfg.model.moe_hybridep_num_sms = 16
+    cfg.model.cuda_graph_impl = "transformer_engine"
+    cfg.model.cuda_graph_scope = ["moe_router", "moe_preprocess"]
+    cfg.model.recompute_granularity = None
+    cfg.model.recompute_method = None
+    cfg.model.recompute_num_layers = None
+    cfg.model.recompute_modules = []
+    cfg.comm_overlap.overlap_moe_expert_parallel_comm = False
+    cfg.comm_overlap.delay_wgrad_compute = False
+
+    cfg.optimizer.main_params_dtype = torch.float32
+    cfg.optimizer.main_grads_dtype = torch.float32
+    cfg.optimizer.exp_avg_dtype = adam_moments_dtype
+    cfg.optimizer.exp_avg_sq_dtype = adam_moments_dtype
+    cfg.optimizer.use_distributed_optimizer = True
+    cfg.ddp.use_distributed_optimizer = True
+    cfg.dist.use_megatron_fsdp = False
+    cfg.ddp.use_megatron_fsdp = False
+    cfg.model.init_model_with_meta_device = False
+
+    cfg.env_vars = {
+        **cfg.env_vars,
+        "NUM_OF_HYBRID_EP_RANKS_PER_NVLINK_DOMAIN": expert_model_parallel_size,
+        "NUM_OF_TOKENS_PER_CHUNK_COMBINE_API": 128,
+    }
+    return cfg
+
+
+def qwen3_235b_a22b_pretrain_16gpu_gb300_bf16_gbs16_config() -> ConfigContainer:
+    """Qwen3 235B-A22B benchmark winner: 16× GB300, BF16, GBS16."""
+    return _build_qwen3_235b_a22b_gb300_bf16_winner(
+        tensor_model_parallel_size=2,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=16,
+        micro_batch_size=2,
+        global_batch_size=16,
+        adam_moments_dtype=torch.bfloat16,
+    )
+
+
+def qwen3_235b_a22b_pretrain_16gpu_gb300_bf16_gbs256_config() -> ConfigContainer:
+    """Qwen3 235B-A22B benchmark winner: 16× GB300, BF16, GBS256."""
+    return _build_qwen3_235b_a22b_gb300_bf16_winner(
+        tensor_model_parallel_size=2,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=16,
+        micro_batch_size=2,
+        global_batch_size=256,
+        adam_moments_dtype=torch.bfloat16,
+    )
+
+
+def qwen3_235b_a22b_pretrain_16gpu_gb300_bf16_gbs1024_config() -> ConfigContainer:
+    """Qwen3 235B-A22B benchmark winner: 16× GB300, BF16, GBS1024."""
+    return _build_qwen3_235b_a22b_gb300_bf16_winner(
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=2,
+        expert_model_parallel_size=8,
+        micro_batch_size=1,
+        global_batch_size=1024,
+        adam_moments_dtype=torch.bfloat16,
+    )
+
+
+def qwen3_235b_a22b_pretrain_32gpu_gb300_bf16_gbs16_config() -> ConfigContainer:
+    """Qwen3 235B-A22B benchmark winner: 32× GB300, BF16, GBS16."""
+    return _build_qwen3_235b_a22b_gb300_bf16_winner(
+        tensor_model_parallel_size=2,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=32,
+        micro_batch_size=1,
+        global_batch_size=16,
+        adam_moments_dtype=torch.float32,
+    )
+
+
+def qwen3_235b_a22b_pretrain_32gpu_gb300_bf16_gbs256_config() -> ConfigContainer:
+    """Qwen3 235B-A22B benchmark winner: 32× GB300, BF16, GBS256."""
+    return _build_qwen3_235b_a22b_gb300_bf16_winner(
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=32,
+        micro_batch_size=1,
+        global_batch_size=256,
+        adam_moments_dtype=torch.float32,
+    )
+
+
+def qwen3_235b_a22b_pretrain_32gpu_gb300_bf16_gbs1024_config() -> ConfigContainer:
+    """Qwen3 235B-A22B benchmark winner: 32× GB300, BF16, GBS1024."""
+    return _build_qwen3_235b_a22b_gb300_bf16_winner(
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=32,
+        micro_batch_size=1,
+        global_batch_size=1024,
+        adam_moments_dtype=torch.float32,
+    )
+
+
 def qwen3_235b_a22b_pretrain_64gpu_gb300_fp8cs_config() -> ConfigContainer:
     """Qwen3 235B-A22B pretrain: 64× GB300, FP8 current-scaling, PP=2, EP=32."""
     cfg = qwen3_235b_a22b_pretrain_config()
