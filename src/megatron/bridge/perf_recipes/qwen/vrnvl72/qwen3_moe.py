@@ -102,10 +102,10 @@ def _build_qwen3_235b_a22b_vrnvl72_bf16_benchmark(
 def qwen3_235b_a22b_pretrain_16gpu_vrnvl72_bf16_gbs16_config() -> ConfigContainer:
     """Qwen3 235B-A22B benchmark: 16× VRNVL72, BF16, GBS16."""
     return _build_qwen3_235b_a22b_vrnvl72_bf16_benchmark(
-        tensor_model_parallel_size=2,
-        pipeline_model_parallel_size=2,
-        expert_model_parallel_size=8,
-        micro_batch_size=1,
+        tensor_model_parallel_size=4,
+        pipeline_model_parallel_size=1,
+        expert_model_parallel_size=16,
+        micro_batch_size=4,
         global_batch_size=16,
         optimizer_moments_dtype=torch.bfloat16,
     )
@@ -117,7 +117,7 @@ def qwen3_235b_a22b_pretrain_16gpu_vrnvl72_bf16_gbs256_config() -> ConfigContain
         tensor_model_parallel_size=2,
         pipeline_model_parallel_size=2,
         expert_model_parallel_size=8,
-        micro_batch_size=1,
+        micro_batch_size=2,
         global_batch_size=256,
         optimizer_moments_dtype=torch.bfloat16,
     )
@@ -126,9 +126,9 @@ def qwen3_235b_a22b_pretrain_16gpu_vrnvl72_bf16_gbs256_config() -> ConfigContain
 def qwen3_235b_a22b_pretrain_16gpu_vrnvl72_bf16_gbs1024_config() -> ConfigContainer:
     """Qwen3 235B-A22B benchmark: 16× VRNVL72, BF16, GBS1024."""
     return _build_qwen3_235b_a22b_vrnvl72_bf16_benchmark(
-        tensor_model_parallel_size=2,
-        pipeline_model_parallel_size=2,
-        expert_model_parallel_size=8,
+        tensor_model_parallel_size=1,
+        pipeline_model_parallel_size=4,
+        expert_model_parallel_size=4,
         micro_batch_size=1,
         global_batch_size=1024,
         optimizer_moments_dtype=torch.bfloat16,
